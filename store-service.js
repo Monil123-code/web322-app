@@ -1,5 +1,5 @@
-let items = [];
-let categories = [];
+let itemsArr = [];
+let categoriesArr = [];
 
 const fs = require("fs"); 
 
@@ -14,22 +14,22 @@ const fs = require("fs");
   
         try {
        
-          items = JSON.parse(itemsData);
+          itemsArr = JSON.parse(itemsData);
           fs.readFile('./data/categories.json', 'utf8', (err, categoriesData) => {
             if (err) {
-              reject('Unable to read categories file');
+              reject('Unable to read categories');
               return;
             }
   
             try {
-              categories = JSON.parse(categoriesData)
+              categoriesArr = JSON.parse(categoriesData)
               resolve();
             } catch (error) {
-              reject('Error parsing categories file');
+              reject('Error parsing categories');
             }
           });
         } catch (error) {
-          reject('Error parsing items file');
+          reject('Error parsing items');
         }
       });
     });
@@ -37,19 +37,19 @@ const fs = require("fs");
 
   function getAllItems() {
   return new Promise((resolve, reject) => {
-    if (items.length === 0) {
-      reject('No results returned');
+    if (itemsArr.length === 0) {
+      reject('No items returned');
     } else {
-      resolve(items);
+      resolve(itemsArr);
     }
   });
 }
 
 function getPublishedItems() {
   return new Promise((resolve, reject) => {
-    const publishedItems = items.filter(item => item.published === true);
+    const publishedItems = itemsArr.filter(item => itemsArr.published === true);
     if (publishedItems.length === 0) {
-      reject('No results returned');
+      reject('No publishedItem returned');
     } else {
       resolve(publishedItems);
     }
@@ -58,10 +58,10 @@ function getPublishedItems() {
 
 function getCategories() {
   return new Promise((resolve, reject) => {
-    if (categories.length === 0) {
-      reject('No results returned');
+    if (categoriesArr.length === 0) {
+      reject('No Categories returned');
     } else {
-      resolve(categories);
+      resolve(categoriesArr);
     }
   });
 }

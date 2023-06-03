@@ -32,7 +32,7 @@ app.get('/about', (req, res) => {
         res.json(data);
       })
       .catch(error => {
-        res.status(500).json({ message: error });
+        res.status(500).json({ message: 'getPublishedItems failed' });
       });
   });
   
@@ -42,7 +42,7 @@ app.get('/about', (req, res) => {
         res.json(data);
       })
       .catch(error => {
-        res.status(500).json({ message: error });
+        res.status(500).json({ message: 'getAllItems failed' });
       });
   });
   
@@ -52,7 +52,7 @@ app.get('/about', (req, res) => {
         res.json(data);
       })
       .catch(error => {
-        res.status(500).json({ message: error });
+        res.status(500).json({ message: 'getCategories failed' });
       });
   });
   
@@ -67,10 +67,10 @@ storeService.initialize()
 .then(() => {
   // Start the server
   app.listen(HTTP_PORT, () => {
-    console.log('Server is running on port 8080');
+    console.log('Server is running on port'  + HTTP_PORT);
   });
 })
   .catch(error => {
     // Output the error to the console
-    console.error('Failed to initialize data:');
+    console.error('Failed to initialize data');
   });
