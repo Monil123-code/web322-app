@@ -70,7 +70,7 @@ app.get('/about', (req, res) => {
   });
   
   app.get('/items/add', (req, res) => {
-    res.sendFile(__dirname + '/views/additem.html');
+    res.sendFile(__dirname + '/views/addItem.html');
   });
 
   app.get('/items?category=value', (req, res) =>{
