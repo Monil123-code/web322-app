@@ -1,9 +1,9 @@
 /*********************************************************************************
-*  WEB322 – Assignment 02
+*  WEB322 – Assignment 03
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part *  of this assignment has been copied manually or electronically from any other source
 *  (including 3rd party web sites) or distributed to other students.
 *
-*  Name: Monilkuamr Patel Student ID: 156199218 Date: 26/05/2023
+*  Name: Monilkuamr Patel Student ID: 156199218 Date: 14/06/2023
 *
 *  Cyclic Web App URL: https://plum-spotless-cygnet.cyclic.app/
 *
@@ -11,17 +11,30 @@
 *
 ********************************************************************************/ 
 const storeService = require('./store-service');
+const multer = require("multer");
+const cloudinary = require('cloudinary').v2
+const streamifier = require('streamifier')
+
 var HTTP_PORT = process.env.PORT || 8080;
 var express = require("express");
 var app = express();
 app.use(express.static('public')); 
 
-// setup a 'route' to listen on the default url path
+cloudinary.config({
+  cloud_name: 'dluqvusch',
+  api_key: '889568762511658',
+  api_secret: 'oJK5eNHOmETcUW6J-NQiSZYKTMY',
+  secure: true
+});
+
+const upload = multer();
+
+
 app.get("/", (req, res) => {
     res.redirect('/about')
 });
 
-// Return the about.html file
+
 app.get('/about', (req, res) => {
     res.sendFile(__dirname + '/views/about.html');
   });
@@ -32,7 +45,7 @@ app.get('/about', (req, res) => {
         res.json(data);
       })
       .catch(error => {
-        res.status(500).json({ message: 'getPublishedItems failed' });
+        res.status(500).json({ message: 'getPublishedItem failed' });
       });
   });
   
@@ -56,21 +69,103 @@ app.get('/about', (req, res) => {
       });
   });
   
-  // Add the following route at the end to handle unmatched routes
+  app.get('/items/add', (req, res) => {
+    res.sendFile(__dirname + '/views/additem.html');
+  });
+
+  app.get('/items?category=value', (req, res) =>{
+    category = value;
+    storeService.getItemsByCategory(category)
+    .then(data => {
+      res.json(data);
+    }) 
+    .catch(error => {
+      res.status(500).json({ message: 'getItemsByCategory failed' });
+    });
+  });
+
+  app.get('/items?minDate=value', (req, res) =>{
+    minDateStr = value;
+    storeService.getItemsByMinDate(minDateStr)
+    .then(data => {
+      res.json(data);
+    }) 
+    .catch(error => {
+      res.status(500).json({ message: 'getItemsByMinDate failed' });
+    });
+  });
+
+  app.get('/items/value',(req, res) =>{
+id = value;
+    storeService.getItemsById(id)
+    .then(data => {
+      res.json(data);
+    });  
+  });
+
+
+  app.post('/items/add', upload.single("featureImage"), (req, res) => {
+    if(req.file){
+      let streamUpload = (req) => {
+          return new Promise((resolve, reject) => {
+              let stream = cloudinary.uploader.upload_stream(
+                  (error, result) => {
+                      if (result) {
+                          resolve(result);
+                      } else {
+                          reject(error);
+                      }
+                  }
+              );
+  
+              streamifier.createReadStream(req.file.buffer).pipe(stream);
+          });
+      };
+  
+      async function upload(req) {
+          let result = await streamUpload(req);
+          console.log(result);
+          return result;
+      }
+  
+      upload(req).then((uploaded)=>{
+          processItem(uploaded.url);
+      });
+  }
+  else
+  {
+      processItem("");
+  }
+   
+  function processItem(imageUrl){
+      req.body.featureImage = imageUrl;
+  
+      
+    const newItem = req.body;
+
+    storeService.addItem(newItem)
+    .then(data => {
+      res.redirect('/items');
+    })
+  } 
+  
+  });
+  
+  
   app.get('*', (req, res) => {
     res.status(404).json({ message: 'Page Not Found' });
   });
+
   
-  
-// Initialize the data before starting the server
+
 storeService.initialize()
 .then(() => {
-  // Start the server
+ 
   app.listen(HTTP_PORT, () => {
-    console.log('Server is running on port'  + HTTP_PORT);
+    console.log('Server is running on port '  + HTTP_PORT);
   });
 })
   .catch(error => {
-    // Output the error to the console
+    
     console.error('Failed to initialize data');
   });

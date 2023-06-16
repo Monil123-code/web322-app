@@ -46,15 +46,17 @@ const fs = require("fs");
 }
 
 function getPublishedItems() {
-  return new Promise((resolve, reject) => {
-    const publishedItems = itemsArr.filter(item => itemsArr.published === true);
-    if (publishedItems.length === 0) {
-      reject('No publishedItem returned');
-    } else {
-      resolve(publishedItems);
-    }
-  });
+  return new Promise((resolve,reject)=>{
+   if(itemsArr.length > 0) 
+   {
+     resolve(itemsArr.filter(itemsArr => itemsArr.published))
+     }
+   else
+   { reject("Item not found!");
+  }
+});
 }
+
 
 function getCategories() {
   return new Promise((resolve, reject) => {
@@ -66,9 +68,73 @@ function getCategories() {
   });
 }
 
+function addItem(itemData) {
+  return new Promise((resolve, reject) => {
+    if (itemData.published == undefined){
+ itemData.published = false;
+}
+ else
+ {
+  itemData.published = true;
+ }
+ itemData.id = itemsArr.length + 1;
+ itemsArr.push(itemData);
+ resolve(itemData);
+});
+
+}
+
+function getItemsByCategory(category)
+{  return new Promise((resolve, reject) => {
+  const itemsByCategory = items.filter(item => item.category === category);
+  
+  if (itemsByCategory.length > 0) 
+  {
+    resolve(itemsByCategory);
+  } 
+  else 
+  {
+    reject("Item not found!");
+  }
+});
+}
+
+function getItemsByMinDate(minDateStr) {
+  return new Promise((resolve, reject) => {
+    const itemsByMinDate = itemsArr.filter(itemsArr => new Date(itemsArr.postDate) >= new Date(minDateStr));
+if (itemsByMinDate > 0)
+{
+  resolve(itemsByMinDate);
+}
+else
+{
+  reject("Item not found!")
+}
+  });
+}
+
+function getItemsById(id) {
+  return new Promise((resolve, reject) => {
+    const itemsById = itemsArr.filter(itemsArr => itemsArr.id == id);
+if (itemsById > 0)
+{
+  resolve(itemsById);
+}
+else{
+  reject("Item not found!");
+}
+  });
+}
+
+
+
 module.exports = {
     initialize,
     getAllItems,
     getPublishedItems,
     getCategories,
+    addItem,
+    getItemsByCategory,
+    getItemsByMinDate,
+    getItemsById
   };
