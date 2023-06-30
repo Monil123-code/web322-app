@@ -57,6 +57,17 @@ function getPublishedItems() {
 });
 }
 
+function getPublishedItemsByCategory(category){
+  return new Promise((resolve,reject)=>{
+   if(itemsArr.length > 0) 
+   {
+     resolve(itemsArr.filter(itemsArr => itemsArr.published == true && itemsArr.category == category))
+     }
+   else
+   { reject("Item not found!");
+  }
+});
+}
 
 function getCategories() {
   return new Promise((resolve, reject) => {
@@ -69,14 +80,19 @@ function getCategories() {
 }
 
 function addItem(itemData) {
-  return new Promise((resolve, reject) => {
-    if (itemData.published == undefined){
+ return new Promise((resolve, reject) => {
+ if (itemData.published == undefined){
  itemData.published = false;
 }
  else
  {
   itemData.published = true;
  }
+  const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    const currentDay = currentDate.getDate();
+    itemData.postDate = `${currentYear}-${currentMonth}-${currentDay}`;
  itemData.id = itemsArr.length + 1;
  itemsArr.push(itemData);
  resolve(itemData);
@@ -86,7 +102,7 @@ function addItem(itemData) {
 
 function getItemsByCategory(category)
 {  return new Promise((resolve, reject) => {
-  const itemsByCategory = items.filter(item => item.category === category);
+  const itemsByCategory = itemsArr.filter(itemsArr => itemsArr.category === category);
   
   if (itemsByCategory.length > 0) 
   {
@@ -136,5 +152,6 @@ module.exports = {
     addItem,
     getItemsByCategory,
     getItemsByMinDate,
-    getItemsById
+    getItemsById,
+    getPublishedItemsByCategory
   };

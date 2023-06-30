@@ -1,9 +1,9 @@
 /*********************************************************************************
-*  WEB322 – Assignment 03
+*  WEB322 – Assignment 04
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part *  of this assignment has been copied manually or electronically from any other source
 *  (including 3rd party web sites) or distributed to other students.
 *
-*  Name: Monilkuamr Patel Student ID: 156199218 Date: 16/06/2023
+*  Name: Monilkuamr Patel Student ID: 156199218 Date: 30/06/2023
 *
 *  Cyclic Web App URL: https://plum-spotless-cygnet.cyclic.app/
 *
@@ -11,14 +11,46 @@
 *
 ********************************************************************************/ 
 const storeService = require('./store-service');
+const express = require("express");
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2
 const streamifier = require('streamifier')
+const exphbs = require("express-handlebars");
 
-var HTTP_PORT = process.env.PORT || 8080;
-var express = require("express");
 var app = express();
+var HTTP_PORT = process.env.PORT || 8080;
+
+app.engine(".hbs", exphbs.engine({ extname: ".hbs" }));
+app.set("view engine", ".hbs");
 app.use(express.static('public')); 
+
+
+app.use(function(req,res,next){
+  let route = req.path.substring(1);
+  app.locals.activeRoute = "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
+  app.locals.viewingCategory = req.query.category;
+  next();
+});
+
+app.engine('.hbs', exphbs.engine({ 
+  extname: '.hbs',
+  helpers: { 
+    navLink: function(url, options) {
+      const isActive = (url === app.locals.activeRoute);
+      const activeClass = isActive ? 'active' : '';
+      return `<li class="nav-item"><a class="nav-link ${activeClass}" href="${url}">${options.fn(this)}</a></li>`;
+    },
+      equal: function (lvalue, rvalue, options) {
+        if (arguments.length < 3)
+            throw new Error("Handlebars Helper equal needs 2 parameters");
+        if (lvalue != rvalue) {
+            return options.inverse(this);
+        } else {
+            return options.fn(this);
+        }
+    }    
+  }
+}));
 
 cloudinary.config({
   cloud_name: 'dluqvusch',
@@ -29,77 +61,129 @@ cloudinary.config({
 
 const upload = multer();
 
-
 app.get("/", (req, res) => {
-    res.redirect('/about')
+  res.redirect('/shop')
 });
 
-
 app.get('/about', (req, res) => {
-    res.sendFile(__dirname + '/views/about.html');
-  });
-
-  app.get('/shop', (req, res) => {
-    storeService.getPublishedItems()
-      .then(data => {
-        res.json(data);
-      })
-      .catch(error => {
-        res.status(500).json({ message: 'getPublishedItem failed' });
-      });
+    res.render('about', {
+    });
   });
   
-  app.get('/items', (req, res) => {
-    storeService.getAllItems()
-      .then(data => {
-        res.json(data);
-      })
-      .catch(error => {
-        res.status(500).json({ message: 'getAllItems failed' });
-      });
+  app.get("/shop", async (req, res) => {
+    let viewData = {};
+  
+    try {
+      let items = [];
+  
+      if (req.query.category) {
+        items = await storeService.getPublishedItemsByCategory(req.query.category);
+      } else {
+        items = await storeService.getPublishedItems();
+      }
+  
+      items.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
+  
+      viewData.items = items;
+      viewData.post = items[0]; 
+  
+    } catch (err) {
+      viewData.message = "no results";
+    }
+  
+    try {
+      let categories = await storeService.getCategories();
+      viewData.categories = categories;
+    } catch (err) {
+      viewData.categoriesMessage = "no results";
+    }
+  
+    res.render("shop", { data: viewData });
   });
+  
+
+  
+  app.get('/shop/:id', async (req, res) => {
+    let viewData = {};
+  
+    try {
+      let items = [];
+  
+      if (req.query.category) {
+        items = await storeService.getPublishedItemsByCategory(req.query.category);
+      } else {
+        items = await storeService.getPublishedItems();
+      }
+  
+      items.sort((a, b) => new Date(b.postDate) - new Date(a.postDate));
+  
+      viewData.items = items;
+  
+    } catch (err) {
+      viewData.message = "no results";
+    }
+  
+    try {
+      viewData.item = await storeService.getItemById(req.params.id);
+    } catch (err) {
+      viewData.message = "no results";
+    }
+  
+    try {
+      let categories = await storeService.getCategories();
+      viewData.categories = categories;
+    } catch (err) {
+      viewData.categoriesMessage = "no results";
+    }
+  
+    res.render("shop", { data: viewData });
+  });
+
+ 
+app.get('/items', (req,res)=>
+{
+
+    let queryPromise = null;
+
+   
+    if(req.query.category){
+       
+        queryPromise = storeService.getItemsByCategory(req.query.category);
+    }else if(req.query.minDate){
+       
+        queryPromise = storeService.getItemsByMinDate(req.query.minDate);
+    }else{
+      
+        queryPromise = storeService.getAllItems()
+    } 
+
+    queryPromise.then(data=>{
+        res.render("items",{ data : data })
+    }).catch(err=>{
+        res.render("items", {message: "no results"});
+    })
+});
   
   app.get('/categories', (req, res) => {
     storeService.getCategories()
       .then(data => {
-        res.json(data);
+        res.render("categories",{data : data});
       })
       .catch(error => {
-        res.status(500).json({ message: 'getCategories failed' });
+        res.render("categories",{ message: 'getCategories failed' });
       });
   });
   
   app.get('/items/add', (req, res) => {
-    res.sendFile(__dirname + '/views/addItem.html');
+    res.render('addItem');
   });
 
-  app.get('/items?category=value', (req, res) =>{
-    category = value;
-    storeService.getItemsByCategory(category)
-    .then(data => {
-      res.json(data);
-    }) 
-    .catch(error => {
-      res.status(500).json({ message: 'getItemsByCategory failed' });
-    });
-  });
 
-  app.get('/items?minDate=value', (req, res) =>{
-    minDateStr = value;
-    storeService.getItemsByMinDate(minDateStr)
-    .then(data => {
-      res.json(data);
-    }) 
-    .catch(error => {
-      res.status(500).json({ message: 'getItemsByMinDate failed' });
-    });
-  });
-
-  app.get('/items/value',(req, res) =>{
-id = value;
+  app.get('/items/:value',(req, res) =>{
+id = req.params.value;
     storeService.getItemsById(id)
     .then(data => {
-      res.json(data);
+      res.render('items', {data : data});
     });  
   });
 
@@ -147,13 +231,16 @@ id = value;
     .then(data => {
       res.redirect('/items');
     })
+    .catch((err) => {
+      res.status(500).json({ message: 'addItem failed' });
+    });
   } 
   
   });
   
   
   app.get('*', (req, res) => {
-    res.status(404).json({ message: 'Page Not Found' });
+    res.render('404');
   });
 
   
