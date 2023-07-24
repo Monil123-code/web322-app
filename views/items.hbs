@@ -1,6 +1,9 @@
 <div class="row">
     <div class="col-md-12">
-        <h2>Items</h2>
+        <h2><br><br><br>
+        Items
+           <a href="/items/add" class="btn btn-success pull-right">Add Post</a> 
+        </h2>
         <hr />
         <div class="table-responsive">
             <table class="table">
@@ -12,6 +15,7 @@
                         <th>Price</th>
                         <th>Category</th>
                         <th>Published</th>
+                        <th></th> 
                     </tr>
                 </thead>
                 <tbody>
@@ -24,14 +28,15 @@
                         <td>{{price}}</td>
                         <td><a href="/items?category={{data.post.id}}">{{category}}</a></td>
                         <td>{{published}}</td>
+                        <td>
+                             <td><a href="/items/delete/{{id}}" class="btn btn-danger">remove</a></td>
+                        </td>
                     </tr>
                     {{/each}}
                 {{else}}
-                    <div class="col-md-12 text-center">
-                     {{#unless posts}}
-                     <strong>{{message}}</strong>
-                     {{/unless}}
-                    </div>
+                    <tr>
+                        <td colspan="7" class="text-center"><strong>{{message}}</strong></td>
+                    </tr>
                 {{/if}}
                 </tbody>
             </table>
