@@ -290,13 +290,10 @@ app.get('/categories/delete/:id', (req, res) => {
     });
 });
 
-app.get('*', (req, res) => {
-  res.render('404');
-});
 
-app.get('/Items/delete/:id', function (req, res) {
+app.get('/items/delete/:id', function (req, res) {
   const postId = req.params.id;
-
+console.log("im here");
   storeService.deletePostById(postId)
     .then(() => {
       res.redirect('/items');
@@ -305,6 +302,11 @@ app.get('/Items/delete/:id', function (req, res) {
       res.status(500).send('Unable to Remove Post / Post not found');
     });
 });
+
+app.get('*', (req, res) => {
+  res.render('404');
+});
+
 
 storeService.initialize()
   .then(() => {
