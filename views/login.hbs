@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+     <head>
+        <br>
+        <br>
+        <br>
+    </head>
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        {{#if errorMessage}}
+          <div class="alert alert-danger">
+            <strong>Error:</strong> {{errorMessage}}
+          </div>
+        {{/if}}
+        
+        <form action="/login" method="post" class="form-horizontal">
+          <div class="form-group">
+            <label for="userName" class="control-label col-sm-3">User Name</label>
+            <div class="col-sm-9">
+              <input type="text" id="userName" name="userName" class="form-control" placeholder="User Name" required value="{{userName}}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password" class="control-label col-sm-3">Password</label>
+            <div class="col-sm-9">
+              <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+            </div>
+            <br>
+          </div>
+          <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-9">
+              <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

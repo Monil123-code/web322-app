@@ -1,9 +1,9 @@
 /*********************************************************************************
-*  WEB322 – Assignment 05
+*  WEB322 – Assignment 06
 *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part *  of this assignment has been copied manually or electronically from any other source
 *  (including 3rd party web sites) or distributed to other students.
 *
-*  Name: Monilkuamr Patel Student ID: 156199218 Date: 24/07/2023
+*  Name: Monilkuamr Patel Student ID: 156199218 Date: 11/08/2023
 *
 *  Cyclic Web App URL: https://plum-spotless-cygnet.cyclic.app/
 *
@@ -12,7 +12,9 @@
 ********************************************************************************/
 var HTTP_PORT = process.env.PORT || 8080;
 const express = require("express");
+const authData = require('./auth-service');
 const storeService = require('./store-service');
+const clientSessions = require("client-sessions");
 const multer = require("multer");
 const cloudinary = require('cloudinary').v2
 const streamifier = require('streamifier')
@@ -28,6 +30,19 @@ app.use(function (req, res, next) {
   let route = req.path.substring(1);
   app.locals.activeRoute = "/" + (isNaN(route.split('/')[1]) ? route.replace(/\/(?!.*)/, "") : route.replace(/\/(.*)/, ""));
   app.locals.viewingCategory = req.query.category;
+  next();
+});
+
+
+app.use(clientSessions({
+  cookieName: "session", 
+  secret: "week10example_web322",
+  duration: 2 * 60 * 1000, 
+  activeDuration: 1000 * 60 
+}));
+
+app.use(function(req, res, next) {
+  res.locals.session = req.session;
   next();
 });
 
@@ -73,6 +88,55 @@ app.get("/", (req, res) => {
 app.get('/about', (req, res) => {
   res.render('about', {
   });
+});
+
+app.get('/login', (req, res) =>{
+  res.render('login',{
+
+  });
+});
+
+app.get('/register', (req, res) =>{
+  res.render('register',{
+
+  });
+});
+
+app.post('/register', async (req, res) => {
+  const userData = req.body; 
+
+  try {
+    await authData.registerUser(userData); 
+    res.render('register', { successMessage: 'User created' });
+  } catch (err) {
+    res.render('register', { errorMessage: err.message, userName: userData.userName });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  req.body.userAgent = req.get('User-Agent');
+
+  try {
+    const user = await authData.checkUser(req.body);
+    req.session.user = {
+      userName: user.userName,
+      email: user.email,
+      loginHistory: user.loginHistory
+    };
+    
+    res.redirect('/items');
+  } catch (err) {
+    res.render('login', { errorMessage: err.message, userName: req.body.userName });
+  }
+});
+
+app.get("/logout", function(req, res) {
+  req.session.reset();
+  res.redirect("/");
+});
+
+app.get('/userHistory', ensureLogin, (req, res) => {
+  res.render('userHistory'); 
 });
 
 app.get("/shop", async (req, res) => {
@@ -145,7 +209,7 @@ app.get('/shop/:id', async (req, res) => {
 });
 
 
-app.get('/items', (req, res) => {
+app.get('/items',ensureLogin, (req, res) => {
 
   let queryPromise = null;
 
@@ -173,7 +237,7 @@ app.get('/items', (req, res) => {
   })
 });
 
-app.get('/categories', (req, res) => {
+app.get('/categories',ensureLogin, (req, res) => {
   storeService.getCategories()
     .then(data => {
       if (data.length > 0) {
@@ -188,7 +252,7 @@ app.get('/categories', (req, res) => {
     });
 });
 
-app.get('/items/add', function (req, res) {
+app.get('/items/add',ensureLogin, function (req, res) {
   storeService.getCategories()
     .then((categories) => {
       res.render("addItem", { category: categories});
@@ -198,7 +262,7 @@ app.get('/items/add', function (req, res) {
     });
 });
 
-app.get('/items/:value', (req, res) => {
+app.get('/items/:value',ensureLogin, (req, res) => {
   id = req.params.value;
   storeService.getItemsById(id)
     .then(data => {
@@ -207,7 +271,7 @@ app.get('/items/:value', (req, res) => {
 });
 
 
-app.post('/items/add', upload.single("featureImage"), (req, res) => {
+app.post('/items/add',ensureLogin, upload.single("featureImage"), (req, res) => {
   if (req.file) {
     let streamUpload = (req) => {
       return new Promise((resolve, reject) => {
@@ -260,11 +324,11 @@ function processItem(req, res, imageUrl) {
     });
 }
 });
-app.get('/categories/add', (req, res) => {
+app.get('/categories/add',ensureLogin, (req, res) => {
   res.render('addCategory');
 });
 
-app.post('/categories/add', (req, res) => {
+app.post('/categories/add',ensureLogin, (req, res) => {
   const categoryData = {
     category: req.body.category
   };
@@ -278,7 +342,7 @@ app.post('/categories/add', (req, res) => {
     });
 });
 
-app.get('/categories/delete/:id', (req, res) => {
+app.get('/categories/delete/:id',ensureLogin, (req, res) => {
   const categoryId = req.params.id;
 
   storeService.deleteCategoryById(categoryId)
@@ -291,7 +355,7 @@ app.get('/categories/delete/:id', (req, res) => {
 });
 
 
-app.get('/items/delete/:id', function (req, res) {
+app.get('/items/delete/:id',ensureLogin, function (req, res) {
   const postId = req.params.id;
 console.log("im here");
   storeService.deletePostById(postId)
@@ -303,19 +367,25 @@ console.log("im here");
     });
 });
 
+function ensureLogin(req, res, next) {
+  if (!req.session.user) {
+    res.redirect("/login");
+  } else {
+    next();
+  }
+}
 app.get('*', (req, res) => {
   res.render('404');
 });
 
 
 storeService.initialize()
-  .then(() => {
-
-    app.listen(HTTP_PORT, () => {
-      console.log('Server is running on port ' + HTTP_PORT);
+.then(authData.initialize)
+.then(function(){
+    app.listen(HTTP_PORT, function(){
+        console.log("app listening on: " + HTTP_PORT)
     });
-  })
-  .catch(error => {
+}).catch(function(err){
+    console.log("unable to start server: " + err);
+});
 
-    console.error('Failed to initialize data');
-  });

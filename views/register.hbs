@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <br>
+        <br>
+        <br>
+    </head>
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-md-offset-3">
+        {{#if errorMessage}}
+          <div class="alert alert-danger">
+            <strong>Error:</strong> {{errorMessage}}
+          </div>
+        {{/if}}
+        
+        {{#if successMessage}}
+          <div class="alert alert-success">
+            <strong>Success:</strong> {{successMessage}}
+          </div>
+          <a class="btn btn-success pull-right" href="/login">&nbsp;&nbsp;&nbsp;Proceed to Log in&nbsp;&nbsp;&nbsp;</a><br /><br /><br />
+        {{else}}
+          <form action="/register" method="post" class="form-horizontal">
+            <div class="form-group">
+              <label for="userName" class="control-label col-sm-3">User Name</label>
+              <div class="col-sm-9">
+                <input type="text" id="userName" name="userName" class="form-control" placeholder="User Name" required value="{{userName}}">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="password" class="control-label col-sm-3">Password</label>
+              <div class="col-sm-9">
+                <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="password2" class="control-label col-sm-3">Confirm Password</label>
+              <div class="col-sm-9">
+                <input type="password" id="password2" name="password2" class="form-control" placeholder="Confirm Password" required>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="email" class="control-label col-sm-3">Email Address</label>
+              <div class="col-sm-9">
+                <input type="email" id="email" name="email" class="form-control" placeholder="Email Address" required>
+                <br>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-sm-offset-3 col-sm-9">
+                <button type="submit" class="btn btn-primary">Register</button>
+              </div>
+            </div>
+          </form>
+        {{/if}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
